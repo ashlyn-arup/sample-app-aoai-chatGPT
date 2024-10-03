@@ -5,8 +5,6 @@ import logging
 import uuid
 import httpx
 import asyncio
-from azure.search.documents import SearchClient
-from azure.core.credentials import AzureKeyCredential
 from quart import (
     Blueprint,
     Quart,
@@ -27,7 +25,6 @@ from backend.auth.auth_utils import get_authenticated_user_details
 from backend.security.ms_defender_utils import get_msdefender_user_json
 from backend.history.cosmosdbservice import CosmosConversationClient
 from backend.settings import (
-    _AzureSearchSettings,
     app_settings,
     MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION
 )
@@ -867,20 +864,15 @@ async def generate_title(conversation_messages) -> str:
     title_prompt = "Summarize the conversation so far into a 4-word or less title. Do not use any quotation marks or punctuation. Do not include any other commentary or description."
 
     messages = [
-        {"role": msg["role"], 
-         "content": msg["content"]}
+        {"role": msg["role"], "content": msg["content"]}
         for msg in conversation_messages
     ]
-    
     messages.append({"role": "user", "content": title_prompt})
 
     try:
         azure_openai_client = await init_openai_client()
         response = await azure_openai_client.chat.completions.create(
-            model=app_settings.azure_openai.model, 
-            messages=messages,
-            temperature=1, 
-            max_tokens=64
+            model=app_settings.azure_openai.model, messages=messages, temperature=1, max_tokens=64
         )
 
         title = response.choices[0].message.content
