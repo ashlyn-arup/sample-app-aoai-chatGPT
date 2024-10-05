@@ -81,7 +81,7 @@ async def assets(path):
 # Debug settings
 DEBUG = os.environ.get("DEBUG", "false")
 if DEBUG.lower() == "true":
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
 
 USER_AGENT = "GitHubSampleWebApp/AsyncAzureOpenAI/1.0.0"
 
@@ -208,6 +208,7 @@ async def init_cosmosdb_client():
 
 def prepare_model_args(request_body, request_headers):
     request_messages = request_body.get("messages", [])
+    filter_condition = request_body.get("filter", None) 
     messages = []
     if not app_settings.datasource:
         messages = [
@@ -255,11 +256,17 @@ def prepare_model_args(request_body, request_headers):
     }
 
     if app_settings.datasource:
+        payload_config = app_settings.datasource.construct_payload_configuration(request=request)
+        
+        
+        # Add the dynamic filter if provided
+        if filter_condition:
+            payload_config["parameters"]["filter"] = filter_condition
+            print(f"The filter condition is {filter_condition}")
+        
         model_args["extra_body"] = {
             "data_sources": [
-                app_settings.datasource.construct_payload_configuration(
-                    request=request
-                )
+                payload_config
             ]
         }
 
@@ -347,8 +354,10 @@ async def send_chat_request(request_body, request_headers):
 
     try:
         azure_openai_client = await init_openai_client()
-        raw_response = await azure_openai_client.chat.completions.with_raw_response.create(**model_args)
+        raw_response = await azure_openai_client.chat.completions.with_raw_response.create(**model_args) # raw response doesnt have country & category field
         response = raw_response.parse()
+        logging.info(f"OpenAI response: {response}")
+        print(f"OpenAI response: {response}")
         apim_request_id = raw_response.headers.get("apim-request-id") 
     except Exception as e:
         logging.exception("Exception in send_chat_request")
@@ -369,6 +378,7 @@ async def complete_chat_request(request_body, request_headers):
         )
     else:
         response, apim_request_id = await send_chat_request(request_body, request_headers)
+      
         history_metadata = request_body.get("history_metadata", {})
         return format_non_streaming_response(response, history_metadata, apim_request_id)
 
@@ -376,7 +386,6 @@ async def complete_chat_request(request_body, request_headers):
 async def stream_chat_request(request_body, request_headers):
     response, apim_request_id = await send_chat_request(request_body, request_headers)
     history_metadata = request_body.get("history_metadata", {})
-    
     async def generate():
         async for completionChunk in response:
             yield format_stream_response(completionChunk, history_metadata, apim_request_id)
@@ -386,15 +395,18 @@ async def stream_chat_request(request_body, request_headers):
 
 async def conversation_internal(request_body, request_headers):
     try:
+        # app_settings.azure_openai.stream = False # turn streaming off
         if app_settings.azure_openai.stream and not app_settings.base_settings.use_promptflow:
             result = await stream_chat_request(request_body, request_headers)
             response = await make_response(format_as_ndjson(result))
             response.timeout = None
             response.mimetype = "application/json-lines"
+            print(response)
             return response
         else:
             result = await complete_chat_request(request_body, request_headers)
             return jsonify(result)
+            
 
     except Exception as ex:
         logging.exception(ex)
@@ -409,8 +421,10 @@ async def conversation():
     if not request.is_json:
         return jsonify({"error": "request must be json"}), 415
     request_json = await request.get_json()
-
-    return await conversation_internal(request_json, request.headers)
+    print(f"OpenAI request: {request_json}")
+    res =  await conversation_internal(request_json, request.headers)
+    return res
+    # return await conversation_internal(request_json, request.headers)
 
 
 @bp.route("/frontend_settings", methods=["GET"])
@@ -876,6 +890,7 @@ async def generate_title(conversation_messages) -> str:
         )
 
         title = response.choices[0].message.content
+        logging.info(f"OpenAI response: {response}")
         return title
     except Exception as e:
         logging.exception("Exception while generating title", e)
