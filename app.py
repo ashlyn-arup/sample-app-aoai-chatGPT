@@ -358,13 +358,14 @@ async def send_chat_request(request_body, request_headers):
         response = raw_response.parse()
         logging.info(f"OpenAI response: {response}")
         print(f"OpenAI response: {response}")
-        apim_request_id = raw_response.headers.get("apim-request-id") 
+        apim_request_id = raw_response.headers.get("apim-request-id")
+         
     except Exception as e:
         logging.exception("Exception in send_chat_request")
         raise e
 
     return response, apim_request_id
-
+    # return results
 
 async def complete_chat_request(request_body, request_headers):
     if app_settings.base_settings.use_promptflow:

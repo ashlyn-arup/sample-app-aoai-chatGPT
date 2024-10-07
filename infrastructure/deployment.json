@@ -575,7 +575,15 @@
                         {
                             "name": "UWSGI_THREADS",
                             "value": "2"
-                        }                        
+                        },
+                        {
+                            "name": "AZURE_SEARCH_CATEGORY_COLUMN",
+                            "value": "[parameters('AzureSearchCategoryColumn')]"
+                        },
+                        {
+                            "name": "AZURE_SEARCH_COUNTRY_COLUMN",
+                            "value": "[parameters('AzureSearchCountryColumn')]"
+                        }                      
                     ],
                     "linuxFxVersion": "[variables('WebAppImageName')]"
                 }
