@@ -206,7 +206,7 @@ class _SearchCommonSettings(BaseSettings):
     )
     max_search_queries: Optional[int] = None
     allow_partial_result: bool = False
-    include_contexts: Optional[List[str]] = ["citations", "intent"]
+    include_contexts: Optional[List[str]] = ["citations", "intent", "all_retrieved_documents"]
     vectorization_dimensions: Optional[int] = None
     role_information: str = Field(
         default="You are an AI assistant that helps people find information.",
@@ -309,8 +309,7 @@ class _AzureSearchSettings(BaseSettings, DatasourcePayloadConstructor):
             "title_field": self.title_column,
             "url_field": self.url_column,
             "filepath_field": self.filename_column,
-            "vector_fields": self.vector_columns,
-
+            "vector_fields": self.vector_columns
         }
         return self
     

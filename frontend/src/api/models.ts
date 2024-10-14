@@ -8,6 +8,9 @@ export type AskResponse = {
   exec_results?: ExecResults[]
 }
 
+export type FollowUpQuestion = {
+  question: string | null
+}
 export type Citation = {
   part_index?: number
   content: string
@@ -17,7 +20,8 @@ export type Citation = {
   url: string | null
   metadata: string | null
   chunk_id: string | null
-  reindex_id: string | null
+  reindex_id: string | null,
+  country: string | null
 }
 
 export type ToolMessageContent = {
@@ -41,7 +45,6 @@ export type ChatMessage = {
   id: string
   role: string
   content: string | [{ type: string; text: string }, { type: string; image_url: { url: string } }] 
-  //content : {citations: Citation[]}
   end_turn?: boolean
   date: string
   feedback?: Feedback

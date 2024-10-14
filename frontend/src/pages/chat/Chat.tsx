@@ -138,6 +138,9 @@ const Chat = () => {
   const parseExecResults = (exec_results_: any): void => {
     if (exec_results_ == undefined) return
     const exec_results = exec_results_.length === 2 ? exec_results_ : exec_results_.splice(2)
+
+        // Print the exec_results to the console
+    
     appStateContext?.dispatch({ type: 'SET_ANSWER_EXEC_RESULT', payload: { answerId: answerId, exec_result: exec_results } })
   }
 
@@ -165,6 +168,7 @@ const Chat = () => {
         }
       }
     }
+    
 
     if (resultMessage.role === TOOL) toolMessage = resultMessage
 
@@ -402,10 +406,10 @@ const Chat = () => {
                   throw Error()
                 }
                 if (result.choices?.length > 0) {
-                  result.choices[0].messages.forEach(msg => {
-                    msg.id = result.id
-                    msg.date = new Date().toISOString()
-                  })
+                  // result.choices[0].messages.forEach(msg => {
+                  //   msg.id = result.id
+                  //   msg.date = new Date().toISOString()
+                  // })
                   if (result.choices[0].messages?.some(m => m.role === ASSISTANT)) {
                     setShowLoadingMessage(false)
                   }
