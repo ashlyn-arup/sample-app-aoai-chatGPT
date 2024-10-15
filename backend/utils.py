@@ -1,10 +1,11 @@
 import os
 import json
 import logging
+import re
 import requests
 import dataclasses
 
-from typing import List
+from typing import List, Optional
 
 DEBUG = os.environ.get("DEBUG", "false")
 if DEBUG.lower() == "true":
@@ -74,7 +75,6 @@ def generateFilterString(userToken):
     group_ids = ", ".join([obj["id"] for obj in userGroups])
     return f"{AZURE_SEARCH_PERMITTED_GROUPS_COLUMN}/any(g:search.in(g, '{group_ids}'))"
 
-
 def format_non_streaming_response(chatCompletion, history_metadata, apim_request_id):
     response_obj = {
         "id": chatCompletion.id,
@@ -85,6 +85,8 @@ def format_non_streaming_response(chatCompletion, history_metadata, apim_request
         "history_metadata": history_metadata,
         "apim-request-id": apim_request_id,
     }
+    print("Hello")
+
 
     if len(chatCompletion.choices) > 0:
         message = chatCompletion.choices[0].message
@@ -102,6 +104,7 @@ def format_non_streaming_response(chatCompletion, history_metadata, apim_request
                     "content": message.content,
                 }
             )
+            
             return response_obj
 
     return {}

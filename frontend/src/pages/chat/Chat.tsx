@@ -144,6 +144,42 @@ const Chat = () => {
     appStateContext?.dispatch({ type: 'SET_ANSWER_EXEC_RESULT', payload: { answerId: answerId, exec_result: exec_results } })
   }
 
+  const processMetaData = (firstResultContent: ChatMessage) => {
+    if (typeof firstResultContent.content === "string") {
+      // Split the string on "}, {"
+      const splitContent = firstResultContent.content.split("}, {");
+  
+      // Create an array to hold the metadata objects
+      const metadata = splitContent.map((content) => {
+        // Find all occurrences of the pattern "lt;|&gt;" and take the value on the right of it
+        const values = [];
+        const regex = /lt;\|&gt;([^&]*)/g; // Adjusted regex to capture the value after "lt;|&gt;"
+        let match;
+  
+        while ((match = regex.exec(content)) !== null) {
+          values.push(match[1].trim());
+        }
+
+        if (values[2]) {
+          values[2] = values[2].split('\"')[0].trim();
+        }
+  
+        // Create an object with country, category, and subcategory
+        const metadataObject = {
+          country: values[0] || null,
+          category: values[1] || null,
+          subcategory: values[2] || null
+        };
+
+        return metadataObject;
+      });
+  
+      // Return the final object with metadata array
+      console.log("This is my final metadata", metadata);
+      return { metadata };
+    }
+  }
+
   const processResultMessage = (resultMessage: ChatMessage, userMessage: ChatMessage, conversationId?: string) => {
     if (typeof resultMessage.content === "string" && resultMessage.content.includes('all_exec_results')) {
       const parsedExecResults = JSON.parse(resultMessage.content) as AzureSqlServerExecResults
@@ -168,7 +204,6 @@ const Chat = () => {
         }
       }
     }
-    
 
     if (resultMessage.role === TOOL) toolMessage = resultMessage
 
@@ -181,6 +216,7 @@ const Chat = () => {
         ? setMessages([...messages, assistantMessage])
         : setMessages([...messages, toolMessage, assistantMessage])
     }
+
   }
 
   const makeApiRequestWithoutCosmosDB = async (question: ChatMessage["content"], conversationId?: string) => {
@@ -227,13 +263,15 @@ const Chat = () => {
       messages: [...conversation.messages.filter(answer => answer.role !== ERROR)]
     }
 
+    
     let result = {} as ChatResponse
     try {
       const response = await conversationApi(request, abortController.signal)
       if (response?.body) {
         const reader = response.body.getReader()
-
+        
         let runningText = ''
+        let isFirstObjectLogged = false;
         while (true) {
           setProcessMessages(messageStatus.Processing)
           const { done, value } = await reader.read()
@@ -241,11 +279,12 @@ const Chat = () => {
 
           var text = new TextDecoder('utf-8').decode(value)
           const objects = text.split('\n')
-          objects.forEach(obj => {
+          objects.forEach((obj, index) => {
             try {
               if (obj !== '' && obj !== '{}') {
                 runningText += obj
                 result = JSON.parse(runningText)
+
                 if (result.choices?.length > 0) {
                   result.choices[0].messages.forEach(msg => {
                     msg.id = result.id
@@ -254,9 +293,17 @@ const Chat = () => {
                   if (result.choices[0].messages?.some(m => m.role === ASSISTANT)) {
                     setShowLoadingMessage(false)
                   }
-                  result.choices[0].messages.forEach(resultObj => {
-                    processResultMessage(resultObj, userMessage, conversationId)
-                  })
+                  result.choices[0].messages.forEach((resultObj) => {
+
+                    if (!isFirstObjectLogged) {
+                      console.log("This is the first object", resultObj.content);
+                      processMetaData(resultObj);
+                      isFirstObjectLogged = true; // Ensure only the first object is logged.
+                    }
+
+                    
+                    processResultMessage(resultObj, userMessage, conversationId);
+                })
                 } else if (result.error) {
                   throw Error(result.error)
                 }

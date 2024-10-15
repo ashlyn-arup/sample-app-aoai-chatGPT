@@ -290,6 +290,7 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
             </Stack.Item>
           </Stack>
         </Stack.Item>
+
         {parsedAnswer?.generated_chart !== null && (
           <Stack className={styles.answerContainer}>
             <Stack.Item grow>
@@ -297,6 +298,9 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
             </Stack.Item>
           </Stack>
         )}
+
+
+
         <Stack horizontal className={styles.answerFooter}>
           {!!parsedAnswer?.citations.length && (
             <Stack.Item onKeyDown={e => (e.key === 'Enter' || e.key === ' ' ? toggleIsRefAccordionOpen() : null)}>
@@ -324,7 +328,7 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
             </Stack.Item>
           )}
           <Stack.Item className={styles.answerDisclaimerContainer}>
-            <span className={styles.answerDisclaimer}>AI-generated content may be incorrect</span>
+            <span className={styles.answerDisclaimer}>AI-generated content is based solely on curated data sources</span>
           </Stack.Item>
           {!!answer.exec_results?.length && (
             <Stack.Item onKeyDown={e => (e.key === 'Enter' || e.key === ' ' ? toggleIsRefAccordionOpen() : null)}>
@@ -370,6 +374,20 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
             })}
           </div>
         )}
+
+        {!!parsedAnswer?.followUpQuestions?.length && (
+            <Stack.Item>
+                <Stack horizontal wrap className={`${!!parsedAnswer?.followUpQuestions?.length ? styles.followupQuestionsList : ""}`} tokens={{ childrenGap: 6 }}>
+                <Text className={styles.followupLabel}>Follow-up questions:</Text>
+                {parsedAnswer?.followUpQuestions.map((text, index) => {
+                    return (
+                      <Text className={styles.followupQuestion} key={index}>{text.question}</Text>
+                    );
+                })}
+                </Stack>
+            </Stack.Item>
+        )}
+
       </Stack>
       <Dialog
         onDismiss={() => {

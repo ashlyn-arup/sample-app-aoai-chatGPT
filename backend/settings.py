@@ -259,8 +259,7 @@ class _AzureSearchSettings(BaseSettings, DatasourcePayloadConstructor):
     vector_columns: Optional[List[str]] = Field(default=None, exclude=True)
     title_column: Optional[str] = Field(default=None, exclude=True)
     url_column: Optional[str] = Field(default=None, exclude=True)
-    country_column: Optional[str] = Field(default="country", exclude=True)
-    category_column: Optional[str] = Field(default="category", exclude=True)
+    content_fields_separator: Optional[str] = Field(default=None, exclude=True)
     filename_column: Optional[str] = Field(default=None, exclude=True)
     query_type: Literal[
         'simple',
@@ -309,6 +308,7 @@ class _AzureSearchSettings(BaseSettings, DatasourcePayloadConstructor):
             "title_field": self.title_column,
             "url_field": self.url_column,
             "filepath_field": self.filename_column,
+            "content_fields_separator": self.content_fields_separator,
             "vector_fields": self.vector_columns
         }
         return self
@@ -797,8 +797,6 @@ class _AppSettings(BaseModel):
             if self.base_settings.datasource_type == "AzureCognitiveSearch":
                 self.datasource = _AzureSearchSettings(settings=self, _env_file=DOTENV_PATH)
                 logging.debug("Using Azure Cognitive Search")
-                print("this is cotent col", self.datasource.content_columns)
-                print("this is country column", self.datasource.country_column)
             
             elif self.base_settings.datasource_type == "AzureCosmosDB":
                 self.datasource = _AzureCosmosDbMongoVcoreSettings(settings=self, _env_file=DOTENV_PATH)

@@ -174,6 +174,34 @@
   cursor: pointer;
 }
 
+.followupQuestionsList {
+  margin-top: 0.625em;
+}
+
+.followupQuestionLearnMore {
+  margin-right: 0.3125em;
+  font-weight: 600;
+  line-height: 1.5em;
+}
+
+.followupLabel {
+  font-weight: bold; /* Makes the label bold */
+  margin-right: 10px; /* Adds some space between the label and questions */
+}
+
+.followupQuestion {
+  font-weight: 600;
+  line-height: 1.5em;
+  text-align: center;
+  border-radius: 0.25em;
+  padding: 0em 0.5em;
+  background: #e8ebfa;
+  color: black;
+  font-style: italic;
+  text-decoration: none;
+  cursor: pointer;
+}
+
 .clickableSup:hover {
   text-decoration: underline;
   cursor: pointer;

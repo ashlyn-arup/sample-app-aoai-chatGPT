@@ -28,16 +28,12 @@ export function parseAnswer(answer: AskResponse): ParsedAnswer {
   let answerText = answer.answer
   let allFollowUpQuestions = [] as FollowUpQuestion[];
 
-
   const citationLinks = answerText.match(/\[(doc\d\d?\d?)]/g)
 
   const lengthDocN = '[doc'.length
 
   let filteredCitations = [] as Citation[]
   let citationReindex = 0
-
-  
-
 
   citationLinks?.forEach(link => {
     // Replacing the links/citations with number
@@ -51,8 +47,7 @@ export function parseAnswer(answer: AskResponse): ParsedAnswer {
       filteredCitations.push(citation)
     }
   })
-  console.log("Modified filteredCitations:", filteredCitations);
-  console.log("Modified allFollowUpQuestions:", allFollowUpQuestions);
+  
   filteredCitations = enumerateCitations(filteredCitations)
   
   const regex = /<<([^>>]+)>>/g;
@@ -60,8 +55,8 @@ export function parseAnswer(answer: AskResponse): ParsedAnswer {
   while ((match = regex.exec(answerText)) !== null) {
     allFollowUpQuestions.push({ question: match[1].trim() });
   }
-
-  answerText = answerText.replace(/<<([^>>]+)>>/g, (match, p1) => `\n\n• ${p1.trim()}`);
+  
+  answerText = answerText.split('<<')[0];
 
   // 
   return {
